@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Globe, Upload, Play, X, Bot } from "lucide-react"
+import { Globe, Upload, Play, X, Bot } from 'lucide-react'
 import { motion } from "framer-motion"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
@@ -17,6 +17,27 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
   const [chatbotName, setChatbotName] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [urlError, setUrlError] = useState("")
+
+  const validateUrl = (url: string) => {
+    if (!url.trim()) {
+      setUrlError("URL is required")
+      return false
+    }
+    
+    try {
+      const urlObj = new URL(url)
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        setUrlError("URL must start with http:// or https://")
+        return false
+      }
+      setUrlError("")
+      return true
+    } catch {
+      setUrlError("Please enter a valid URL (e.g., https://example.com)")
+      return false
+    }
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -37,8 +58,7 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
   }
 
   const handleSubmit = async () => {
-    if (!url.trim()) {
-      alert("Please enter a website URL")
+    if (!validateUrl(url)) {
       return
     }
 
@@ -165,11 +185,25 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
           <input
             type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value)
+              if (e.target.value.trim()) {
+                validateUrl(e.target.value)
+              } else {
+                setUrlError("")
+              }
+            }}
             placeholder="https://example.com"
             disabled={isLoading}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              urlError 
+                ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
+                : "border-gray-300 focus:ring-blue-500"
+            }`}
           />
+          {urlError && (
+            <p className="text-red-500 text-sm mt-1">{urlError}</p>
+          )}
         </div>
 
         {/* File Upload */}
@@ -220,7 +254,7 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={isLoading || !url.trim() || !chatbotName.trim()}
+          disabled={isLoading || !url.trim() || !chatbotName.trim() || !!urlError}
           className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
           {isLoading ? (

@@ -157,10 +157,10 @@ export default function ChatbotDetails({ chatbot, onEnhanceWithFiles }: ChatbotD
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <div>
+              {/* <div>
                 <label className="text-sm font-medium text-gray-500">Collection Name</label>
                 <p className="text-gray-800 font-mono text-sm bg-gray-100 p-2 rounded">{chatbot.collection_name}</p>
-              </div>
+              </div> */}
 
               <div>
                 <label className="text-sm font-medium text-gray-500">Created</label>
@@ -175,7 +175,7 @@ export default function ChatbotDetails({ chatbot, onEnhanceWithFiles }: ChatbotD
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500">Status</label>
+                <label className="text-sm font-medium text-gray-500">Status: </label>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Active
                 </span>
