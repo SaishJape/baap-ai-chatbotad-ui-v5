@@ -251,36 +251,44 @@ export default function ChatbotSidebar({ userId, onCreateNew, onSelectChatbot, s
                 }`}
                 onClick={() => onSelectChatbot(chatbot)}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 text-sm">{chatbot.name}</h3>
-                      <div className="flex items-center space-x-1 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(chatbot.created_at)}</span>
-                      </div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-800 text-sm truncate max-w-[140px]">{chatbot.name}</h3>
+                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(chatbot.created_at)}</span>
                     </div>
                   </div>
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={(e) => handleDeleteClick(e, chatbot)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all duration-200 rounded"
-                    title="Delete chatbot"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
+
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => handleDeleteClick(e, chatbot)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all duration-200 rounded flex-shrink-0"
+                  title="Delete chatbot"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
 
                 {chatbot.description && (
                   <p className="text-xs text-gray-600 mb-3 line-clamp-2">{chatbot.description}</p>
                 )}
 
                 {chatbot.source_url && (
-                  <div className="text-xs text-blue-600 mb-3 truncate">🌐 {chatbot.source_url}</div>
+                  <a
+                    href={chatbot.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()} // Prevent triggering the chatbot selection
+                    className="text-xs text-blue-600 mb-3 truncate hover:text-blue-800 transition-colors cursor-pointer block"
+                  >
+                    🌐 {chatbot.source_url}
+                  </a>
                 )}
 
                 <div className="flex items-center justify-between">

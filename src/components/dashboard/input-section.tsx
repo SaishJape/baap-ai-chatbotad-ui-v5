@@ -57,6 +57,34 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
     return `${userId}_${cleanName}_${timestamp}`
   }
 
+  const createChatbotRecord = async (token: string | null, collectionName: string, taskId: string) => {
+    try {
+      const chatbotResponse = await fetch(`${API_BASE_URL}/chatbots`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: chatbotName,
+          collection_name: collectionName,
+          source_url: url,
+          description: `Chatbot created from ${url}`,
+          task_id: taskId, // Include task_id if needed
+        }),
+      })
+
+      if (!chatbotResponse.ok) {
+        throw new Error("Failed to create chatbot record")
+      }
+
+      return await chatbotResponse.json()
+    } catch (error) {
+      console.error("Error creating chatbot record:", error)
+      throw error
+    }
+  }
+
   const handleSubmit = async () => {
     if (!validateUrl(url)) {
       return
@@ -73,26 +101,7 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
       const token = localStorage.getItem("authToken")
       const collectionName = generateCollectionName(chatbotName, userId)
 
-      // First, create chatbot record
-      const chatbotResponse = await fetch(`${API_BASE_URL}/chatbots`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: chatbotName,
-          collection_name: collectionName,
-          source_url: url,
-          description: `Chatbot created from ${url}`,
-        }),
-      })
-
-      if (!chatbotResponse.ok) {
-        throw new Error("Failed to create chatbot record")
-      }
-
-      // Then, process the website URL
+      // First, process the website URL
       const response = await fetch(`${API_BASE_URL}/scrape-and-ingest`, {
         method: "POST",
         headers: {
@@ -108,15 +117,30 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
 
       const data = await response.json()
 
-      if (response.ok) {
-        // If there are files to upload, process them after the URL
-        if (files.length > 0) {
-          await processUploadedFiles(token, collectionName)
-        }
-
-        onStartProcessing(data.task_id, collectionName, chatbotName)
-      } else {
+      if (!response.ok) {
         alert(data.detail || "Failed to start processing")
+        setIsLoading(false)
+        return
+      }
+
+      // If scrape-and-ingest is successful, process uploaded files (if any)
+      let allFilesProcessed = true
+      if (files.length > 0) {
+        allFilesProcessed = await processUploadedFiles(token, collectionName)
+      }
+
+      // Only create chatbot record if URL processing was successful 
+      // and all files were processed successfully (or no files were uploaded)
+      if (allFilesProcessed) {
+        try {
+          await createChatbotRecord(token, collectionName, data.task_id)
+          onStartProcessing(data.task_id, collectionName, chatbotName)
+        } catch (error) {
+          alert("Processing completed but failed to save chatbot record. Please try again.")
+          setIsLoading(false)
+        }
+      } else {
+        alert("URL processing succeeded but some files failed to upload. Chatbot was not created.")
         setIsLoading(false)
       }
     } catch (error) {
@@ -125,7 +149,9 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
     }
   }
 
-  const processUploadedFiles = async (token: string | null, collectionName: string) => {
+  const processUploadedFiles = async (token: string | null, collectionName: string): Promise<boolean> => {
+    let allSuccessful = true
+
     for (const file of files) {
       const formData = new FormData()
       formData.append("file", file)
@@ -143,13 +169,19 @@ export default function InputSection({ onStartProcessing, userId }: InputSection
         if (!response.ok) {
           const errorData = await response.json()
           console.error("File upload error:", errorData)
-          throw new Error(errorData.detail || `Failed to process ${file.name}`)
+          allSuccessful = false
+          alert(`Failed to process ${file.name}: ${errorData.detail || 'Unknown error'}`)
+          // Continue processing other files even if one fails
         }
       } catch (error) {
         console.error("Error uploading file:", file.name, error)
-        // Continue with other files even if one fails
+        allSuccessful = false
+        alert(`Network error while uploading ${file.name}`)
+        // Continue processing other files even if one fails
       }
     }
+
+    return allSuccessful
   }
 
   return (

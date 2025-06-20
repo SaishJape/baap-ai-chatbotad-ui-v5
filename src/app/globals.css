@@ -24,7 +24,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
-    --font-afacad-flux: "Afacad Flux", 
+    --font-afacad-flux: "Afacad Flux";
   }
 
   .dark {
@@ -54,6 +54,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-afacad-flux;
   }
@@ -117,7 +118,26 @@
   background: linear-gradient(45deg, #5a6fd8, #6a4190);
 }
 
-/* Font family utilities */
+/* Font utility */
 .font-afacad-flux {
   font-family: var(--font-afacad-flux);
+}
+
+/* ✅ Transparent background instead of white */
+html, body {
+  background-color: transparent !important;
+}
+
+/* ✅ Remove white from chatbot container */
+.chatbot-container {
+  background-color: transparent !important;
+  min-height: 100vh;
+}
+
+/* ✅ Iframe mode specific styling */
+body.iframe-mode {
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
